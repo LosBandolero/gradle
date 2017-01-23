@@ -20,7 +20,6 @@ import org.gradle.api.Action;
 import org.gradle.api.logging.LogLevel;
 import org.gradle.internal.UncheckedException;
 import org.gradle.internal.concurrent.ExecutorFactory;
-import org.gradle.internal.concurrent.Stoppable;
 import org.gradle.internal.event.DefaultListenerManager;
 import org.gradle.internal.event.ListenerManager;
 import org.gradle.internal.io.ClassLoaderObjectInputStream;
@@ -44,7 +43,7 @@ import org.gradle.process.internal.health.memory.JvmMemoryStatusListener;
 import org.gradle.process.internal.health.memory.MemoryManager;
 import org.gradle.process.internal.health.memory.OsMemoryInfo;
 import org.gradle.process.internal.worker.WorkerLoggingSerializer;
-import org.gradle.process.internal.worker.WorkerProcessInfoSerializer;
+import org.gradle.process.internal.worker.WorkerJvmMemoryInfoSerializer;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -133,12 +132,12 @@ public class SystemApplicationClassLoaderWorker implements Callable<Void> {
     }
 
     private void configureWorkerProcessInfoEvents(WorkerServices services, ObjectConnection connection) {
-        connection.useParameterSerializers(WorkerProcessInfoSerializer.create());
-        final WorkerProcessInfoProtocol workerProcessInfoProtocol = connection.addOutgoing(WorkerProcessInfoProtocol.class);
+        connection.useParameterSerializers(WorkerJvmMemoryInfoSerializer.create());
+        final WorkerJvmMemoryInfoProtocol workerJvmMemoryInfoProtocol = connection.addOutgoing(WorkerJvmMemoryInfoProtocol.class);
         services.get(MemoryManager.class).addListener(new JvmMemoryStatusListener() {
             @Override
             public void onJvmMemoryStatus(JvmMemoryStatus jvmMemoryStatus) {
-                workerProcessInfoProtocol.sendJvmMemoryStatus(jvmMemoryStatus);
+                workerJvmMemoryInfoProtocol.sendJvmMemoryStatus(jvmMemoryStatus);
             }
         });
     }
